@@ -18,6 +18,7 @@ function getList(document){
 
 
 function getTitle(item){
+    console.log(item.querySelector(" h5 a").textContent)
     return item.querySelector(" h5 a").textContent
 }
 
