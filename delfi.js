@@ -22,13 +22,19 @@ function getTitle(item){
     return item.querySelector(" h5 a").textContent
 }
 
+
+function getShortText(document){
+    return document.querySelector('.G-container').querySelectorAll("p")[0].textContent
+}
+
 function getPriviosImage(item){
     return item.querySelector("div.C-lazy-image picture source").srcset
 }
 
 function getFullText(document){
     let text = ""
-    return document.querySelector('.G-container').querySelectorAll("p").forEach(p => text += p.textContent)
+    document.querySelector('.G-container').querySelectorAll("p").forEach(p => text += p.textContent)
+    return text
 
 }
 
@@ -40,6 +46,19 @@ function getHref(item){
     return href
 }
 
+function getImages(document){
+    let list = []
+    document.querySelector('.G-container').querySelectorAll("img").forEach(image=> list.push(image.src))
+    if (list.length >= 1){
+        list.shift()
+    }
+    return list
+}
+
+function getVideos(document){
+    return []
+}
+
 
 module.exports = {
     getList,
@@ -47,5 +66,8 @@ module.exports = {
     categories,
     getTitle,
     getPriviosImage,
-    getFullText
+    getFullText,
+    getShortText,
+    getImages,
+    getVideos
 }

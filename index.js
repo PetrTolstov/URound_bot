@@ -4,7 +4,7 @@ const {JSDOM} = require("jsdom");
 const delfi = require("./delfi")
 
 const { MongoClient } = require('mongodb');
-const {getHref, getFullText} = require("./delfi");
+const {getHref, getFullText, getShortText, getImages, getVideos} = require("./delfi");
 const URL = "mongodb+srv://uround-app:1qaz2wsx3edc@cluster0.2u3vn.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 const client = new MongoClient(URL);
 const database = client.db("URound");
@@ -77,12 +77,19 @@ async function newsItems(news, cat, resource) {
         category: [cat],
         title: resource.getTitle(news),
         href: resource.getHref(news),
-        previewImage: resource.getPriviosImage(news),
+        images: [resource.getPriviosImage(news)],
+        videos: [],
+        shortText: "",
         fullText : ""
     }
 
+    let fullNew = await fullNews(item.href)
 
-    item.fullText = await fullNews(item.href)
+    item.shortText = fullNew[0]
+    item.fullText = fullNew[1]
+    item.images.concat(fullNew[2])
+    item.videos.concat(fullNew[3])
+    console.log(item)
 
     return item
 }
@@ -92,7 +99,7 @@ async function fullNews(href){
         return axios.get(href).then(resp => {
             const dom = new JSDOM(resp.data)
 
-            return getFullText( dom.window.document)
+            return [getShortText(dom.window.document), getFullText(dom.window.document), getImages(dom.window.document), getVideos(dom.window.document)]
         })
     }catch (err){
         console.log(err)
@@ -139,6 +146,7 @@ async function getNewsFromOneResource(){
             if (resource.categories[category] == undefined){
                 continue
             }
+
             const listsPosts = await getNews(resource, resource.categories[category])
 
             for (let i of listsPosts){
