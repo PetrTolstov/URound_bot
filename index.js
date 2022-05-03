@@ -2,17 +2,18 @@ const axios = require('axios');
 const {JSDOM} = require("jsdom");
 
 const delfi = require("./delfi")
+const postimees = require("./postimees")
 
 const { MongoClient } = require('mongodb');
-const {getHref, getFullText, getShortText, getImages, getVideos} = require("./delfi");
+
 const URL = "mongodb+srv://uround-app:1qaz2wsx3edc@cluster0.2u3vn.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 const client = new MongoClient(URL);
 const database = client.db("URound");
 
 const autoPostsCollection = database.collection("autoposts");
 
-const listOfResources = [delfi]
-const categories = ["Estonia", "Ida-Virumaa", "Tallinn", "MK", "CHP"]
+const listOfResources = [postimees, delfi]
+const categories = ["Estonia", "Ida-Virumaa", "Tallinn", "MK", "CHP", "Economic"]
 
 
 async function connectToDB() {
@@ -54,7 +55,7 @@ async function getNews(resource, category) {
         const list = resource.getList(dom.window.document)
 
         for (let i = list.length - 1; i >= 0; i--){
-            let href = getHref(list[i])
+            let href = resource.getHref(list[i])
 
 
             if (await isInBD(href, category)){
@@ -80,26 +81,27 @@ async function newsItems(news, cat, resource) {
         images: [resource.getPriviosImage(news)],
         videos: [],
         shortText: "",
-        fullText : ""
+        fullText : "",
+        date :  new Date().toLocaleString()
     }
 
-    let fullNew = await fullNews(item.href)
+    let fullNew = await fullNews(item.href, resource)
 
     item.shortText = fullNew[0]
     item.fullText = fullNew[1]
-    item.images.concat(fullNew[2])
+    fullNew[2].forEach(photo => item.images.push(photo))
     item.videos.concat(fullNew[3])
+    item.date = fullNew[4]
     console.log(item)
-
     return item
 }
 
-async function fullNews(href){
+async function fullNews(href, resource){
     try {
         return axios.get(href).then(resp => {
             const dom = new JSDOM(resp.data)
 
-            return [getShortText(dom.window.document), getFullText(dom.window.document), getImages(dom.window.document), getVideos(dom.window.document)]
+            return [resource.getShortText(dom.window.document), resource.getFullText(dom.window.document), resource.getImages(dom.window.document), resource.getVideos(dom.window.document), resource.getDate(dom.window.document)]
         })
     }catch (err){
         console.log(err)

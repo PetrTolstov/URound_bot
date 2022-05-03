@@ -24,7 +24,7 @@ function getTitle(item){
 
 
 function getShortText(document){
-    return document.querySelector('.G-container').querySelectorAll("p")[0].textContent
+    return document.querySelector('.G-container').querySelectorAll("p")[0]?.textContent
 }
 
 function getPriviosImage(item){
@@ -59,6 +59,14 @@ function getVideos(document){
     return []
 }
 
+function getDate(document){
+    const dateStr = document.querySelector('.C-article-info__publish-date').textContent.split(", ")//.replace(/\./g, "-").replace(/,/g, "").replace(" ", "T")+":00"
+    const [day, month, year] = dateStr[0].split(".")
+    const [hours, minutes] = dateStr[1].split(":")
+    const date = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00`).toString()
+
+    return date
+}
 
 module.exports = {
     getList,
@@ -69,5 +77,6 @@ module.exports = {
     getFullText,
     getShortText,
     getImages,
-    getVideos
+    getVideos,
+    getDate
 }
