@@ -3,10 +3,10 @@
 const axios = require("axios");
 const {JSDOM} = require("jsdom");
 const categories = {
-    "Estonia" : "https://rus.delfi.ee/kategorija/309647/novosti-estonii",
-    "Ida-Virumaa" : "https://rus.delfi.ee/kategorija/35365823/novosti-ida-virumaa",
-    "MK" : "https://rus.delfi.ee/kategorija/8324703/mk-estoniya",
-    "CHP" : "https://rus.delfi.ee/kategorija/382418/chp-i-kriminal"
+    "estonia" : "https://rus.delfi.ee/kategorija/309647/novosti-estonii",
+    "ida-virumaa" : "https://rus.delfi.ee/kategorija/35365823/novosti-ida-virumaa",
+    "mk" : "https://rus.delfi.ee/kategorija/8324703/mk-estoniya",
+    "chp" : "https://rus.delfi.ee/kategorija/382418/chp-i-kriminal"
 }
 
 
@@ -28,7 +28,7 @@ function getShortText(document){
 }
 
 function getPriviosImage(item){
-    return item.querySelector("div.C-lazy-image picture source").srcset
+    return item.querySelector("div.C-lazy-image picture source")?.srcset
 }
 
 function getFullText(document){

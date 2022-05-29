@@ -3,6 +3,7 @@ const {JSDOM} = require("jsdom");
 
 const delfi = require("./delfi")
 const postimees = require("./postimees")
+const err = require("./err")
 
 const { MongoClient } = require('mongodb');
 
@@ -10,10 +11,10 @@ const URL = "mongodb+srv://uround-app:1qaz2wsx3edc@cluster0.2u3vn.mongodb.net/my
 const client = new MongoClient(URL);
 const database = client.db("URound");
 
-const autoPostsCollection = database.collection("autoposts");
+const autoPostsCollection = database.collection("posts");
 
-const listOfResources = [postimees, delfi]
-const categories = ["Estonia", "Ida-Virumaa", "Tallinn", "MK", "CHP", "Economic"]
+const listOfResources = [ err, delfi, postimees]
+const categories = ["estonia", "ida-virumaa", "tallinn", "mk", "chp", "economic"]
 
 
 async function connectToDB() {
@@ -45,7 +46,7 @@ async function addElement(element) {
 }
 
 
-async function getNews(resource, category) {
+async function getNews(resource, category, categoryStr) {
     try {
         const resp = await axios.get(category)
 
@@ -58,10 +59,10 @@ async function getNews(resource, category) {
             let href = resource.getHref(list[i])
 
 
-            if (await isInBD(href, category)){
+            if (await isInBD(href, categoryStr)){
                 continue
             }
-            listOfNews.push(await newsItems(list[i], category, resource));
+            listOfNews.push(await newsItems(list[i], category, resource, categoryStr));
         }
 
 
@@ -73,12 +74,27 @@ async function getNews(resource, category) {
 }
 
 
-async function newsItems(news, cat, resource) {
+async function newsItems(news, cat, resource, categoryStr) {
+    const title = resource.getTitle(news)
+    const href = resource.getHref(news)
+    let previosImage = resource.getPriviosImage(news)
+
+    if (previosImage[0] == "/"){
+        previosImage = previosImage.slice(1)
+    }
+    if (previosImage[0] == "/"){
+        previosImage = previosImage.slice(1)
+    }
+    if (previosImage[0] != "h"){
+        previosImage = "https://" + previosImage
+    }
+    console.log(previosImage)
+
     let item = {
-        category: [cat],
-        title: resource.getTitle(news),
-        href: resource.getHref(news),
-        images: [resource.getPriviosImage(news)],
+        categories: [categoryStr],
+        title: title ? title : "",
+        href: href ? href : "",
+        images: [previosImage ? previosImage : ""],
         videos: [],
         shortText: "",
         fullText : "",
@@ -87,12 +103,18 @@ async function newsItems(news, cat, resource) {
 
     let fullNew = await fullNews(item.href, resource)
 
-    item.shortText = fullNew[0]
-    item.fullText = fullNew[1]
-    fullNew[2].forEach(photo => item.images.push(photo))
-    item.videos.concat(fullNew[3])
-    item.date = fullNew[4]
-    console.log(item)
+    item.shortText = fullNew[0] ? fullNew[0] : ""
+    item.fullText = fullNew[1] ? fullNew[1] : ""
+    fullNew[2].forEach(photo => {
+        if (photo[0] != "h"){
+            photo.unshift("https://")
+        }
+
+        item.images.push(photo ? photo : "")
+    })
+    item.videos.concat(fullNew[3] ? fullNew[1] : "")
+    item.date = fullNew[4] ? fullNew[4] : ""
+    console.log(item.images)
     return item
 }
 
@@ -109,7 +131,7 @@ async function fullNews(href, resource){
 
 }
 
-async function isInBD(href, cat) {
+async function isInBD(href, categoryStr) {
 
 
     let item = await autoPostsCollection.findOne({href: href })
@@ -121,8 +143,8 @@ async function isInBD(href, cat) {
 
 
     let isInItem = false
-    for (let i = 0; i < item.category.length; i++){
-        if (item.category[i] == cat){
+    for (let i = 0; i < item.categories.length; i++){
+        if (item.categories[i] == categoryStr){
             isInItem = true
             break
         }
@@ -130,9 +152,9 @@ async function isInBD(href, cat) {
 
 
     if (!isInItem){
-        item.category.push(cat)
-        const result = autoPostsCollection.updateOne({_id : item._id}, {$set : {
-                category : item.category
+        item.categories.push(categoryStr)
+        await autoPostsCollection.updateOne({_id : item._id}, {$set : {
+                categories : item.categories
             }})
         console.log("Added category")
     }
@@ -148,15 +170,17 @@ async function getNewsFromOneResource(){
             if (resource.categories[category] == undefined){
                 continue
             }
-
-            const listsPosts = await getNews(resource, resource.categories[category])
-
+            let listsPosts = undefined
+            while (listsPosts == undefined) {
+                listsPosts = await getNews(resource, resource.categories[category], category)
+            }
+            console.log(listsPosts.length)
             for (let i of listsPosts){
-
+                console.log("")
                 await addElement(i)
             }
 
-            console.log(listsPosts.length)
+            console.log("Done\n\n")
         }
 
     }
@@ -167,12 +191,15 @@ async function getNewsFromOneResource(){
 
 
 
+
 ((async () => {
+
 
     await connectToDB()
 
 
 
 } )())
+
 
 

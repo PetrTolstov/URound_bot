@@ -1,11 +1,11 @@
 const axios = require("axios");
 const {JSDOM} = require("jsdom");
 const categories = {
-    "Estonia" : "https://rus.postimees.ee/section/456",
-    "Ida-Virumaa" : "https://rus.postimees.ee/section/664",
-    "Tallinn" : "https://rus.postimees.ee/section/457",
-    "CHP" : "https://rus.postimees.ee/section/460",
-    "Economic" : "https://rus.postimees.ee/section/461"
+    "estonia" : "https://rus.postimees.ee/section/456",
+    "ida-virumaa" : "https://rus.postimees.ee/section/664",
+    "tallinn" : "https://rus.postimees.ee/section/457",
+    "chp" : "https://rus.postimees.ee/section/460",
+    "economic" : "https://rus.postimees.ee/section/461"
 }
 
 
@@ -32,7 +32,7 @@ function getPriviosImage(item){
 
 function getFullText(document){
     let text = getShortText(document)
-    document.querySelectorAll('.article-body')[1].querySelectorAll("p").forEach(p => text += p.textContent)
+    document.querySelectorAll('.article-body')[1]?.querySelectorAll("p").forEach(p => text += p.textContent)
     return text
 
 }
