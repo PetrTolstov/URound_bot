@@ -194,9 +194,8 @@ async function getNewsFromOneResource(){
 
 ((async () => {
 
-    while (true){
-        await connectToDB()
-    }
+    await connectToDB()
+
 
 
 } )())
